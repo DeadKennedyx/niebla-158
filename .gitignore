@@ -1,0 +1,7 @@
+/target
+**/*.rs.bk
+*.sqlite
+Cargo.lock
+.DS_Store
+.idea
+.vscode

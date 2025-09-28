@@ -1,0 +1,26 @@
+[package]
+name = "niebla-158"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Compact block filters (BIP158) + light client plumbing (BIP157) for Bitcoin wallets"
+repository = "https://github.com/deadkennedyx/niebla-158"
+readme = "README.md"
+keywords = ["bitcoin", "bip157", "bip158", "light-client", "wallet"]
+
+[lib]
+name = "niebla_158"
+path = "src/lib.rs"
+
+[features]
+default        = ["runtime", "store-sqlite"]
+runtime        = ["async-trait", "tokio/rt-multi-thread", "tokio/macros"]
+store-sqlite   = ["rusqlite/bundled"]
+
+[dependencies]
+anyhow       = "1"
+async-trait  = { version = "0.1", optional = true }
+bitcoin      = "0.32"            # already in your project
+hex          = "0.4"
+rusqlite     = { version = "0.31", optional = true, default-features = false, features = ["bundled"] }
+tokio = { version = "1", features = ["rt-multi-thread"] }
