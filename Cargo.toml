@@ -7,26 +7,20 @@ description = "Compact block filters (BIP158) + light client plumbing (BIP157) f
 repository = "https://github.com/deadkennedyx/niebla-158"
 readme = "README.md"
 keywords = ["bitcoin", "bip157", "bip158", "light-client", "wallet"]
-categories = ["cryptography::cryptocurrencies"]
 
 [lib]
 name = "niebla_158"
 path = "src/lib.rs"
 
-[features]
-default        = ["runtime", "store-sqlite"]
-runtime        = ["async-trait", "tokio/rt-multi-thread", "tokio/macros"]
-store-sqlite   = ["rusqlite/bundled"]
+# No [features] section anymore — everything is always on.
 
 [dependencies]
 anyhow       = "1"
-async-trait  = { version = "0.1", optional = true }
-bitcoin      = "0.32"            # already in your project
+async-trait  = "0.1"
+bitcoin      = "0.32"
 hex          = "0.4"
-rusqlite     = { version = "0.31", optional = true, default-features = false, features = ["bundled"] }
-tokio = { version = "1", features = ["rt-multi-thread"] }
+rusqlite     = { version = "0.31", default-features = false, features = ["bundled"] }
+tokio        = { version = "1", features = ["rt-multi-thread", "macros"] }
 
 [dev-dependencies]
-tokio        = { version = "1", features = ["rt-multi-thread", "macros"] }
 tempfile     = "3"
-async-trait  = "0.1"

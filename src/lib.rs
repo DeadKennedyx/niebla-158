@@ -76,9 +76,10 @@ pub mod filter_source;
 /// Wallet callbacks: provide a watchlist and receive matches.
 pub mod hooks;
 
-/// Source of block header info (height → block hash).
+/// Block header lookup abstraction (height → hash).
 pub mod headers;
 
+// Internal helpers:
 mod cfheaders;
 mod checkpoints;
 mod matcher;
@@ -86,16 +87,14 @@ mod matcher;
 /// Persistence layer (traits and SQLite implementation).
 pub mod store;
 
+// Public re-exports
 pub use engine::Niebla158;
-pub use filter_source::{CfHeadersBatch, FilterSource};
-pub use headers::HeaderSource;
+pub use filter_source::FilterSource;
 pub use hooks::WalletHooks;
-pub use store::sqlite_store::SqliteStore;
-pub use store::Store;
+pub use store::{sqlite_store::SqliteStore, Store};
 
-/// Convenience re-exports for end users (engine + common traits).
+/// Convenience prelude for end users.
 pub mod prelude {
-    //! Handy re-exports so you can `use niebla_158::prelude::*;`
-    pub use crate::{CfHeadersBatch, FilterSource, HeaderSource, Niebla158, Store, WalletHooks};
+    pub use crate::{FilterSource, Niebla158, SqliteStore, Store, WalletHooks};
 }
 
