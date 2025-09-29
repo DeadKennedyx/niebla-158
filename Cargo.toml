@@ -5,7 +5,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "Compact block filters (BIP158) + light client plumbing (BIP157) for Bitcoin wallets"
 repository = "https://github.com/deadkennedyx/niebla-158"
-readme = "README.md"
+readme = "README.MD"
 keywords = ["bitcoin", "bip157", "bip158", "light-client", "wallet"]
 
 [lib]
