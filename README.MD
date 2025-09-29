@@ -36,13 +36,3 @@ Because the engine consumesw bytes at the boundary, its agnostic to which networ
 Using Nakamoto
 
 You can use Nakamoto as your FilterSource by adding a tiny adapter that converts its responses into the byte shapes this crate expects (cfheaders as [u8; 32] hashes, cfilters as raw bytes, blocks as raw bytes).
-
-## Install
-
-```toml
-[dependencies]
-niebla-158 = { version = "0.1", features = [] }  # sqlite is always on in this crate
-anyhow = "1"
-async-trait = "0.1"
-bitcoin = "0.32"
-
