@@ -45,7 +45,7 @@ Planned: provide a first-party FilterSource implementation backed by Nakamoto an
 
 ## Example use:
 
-```
+```rust
 use std::sync::Arc;
 use anyhow::Result;
 use async_trait::async_trait;
@@ -134,7 +134,7 @@ impl WalletHooks for MyWalletHooks {
     }
 }
 
-// --- 3) Wire it up ----------------------------------------------------------
+// --- 3) Wire it up ---
 #[tokio::main]
 async fn main() -> Result<()> {
     // (a) Store: use the bundled SQLite store
