@@ -1,4 +1,3 @@
-// tests/hit_flow.rs
 use async_trait::async_trait;
 use bitcoin::bip158::BlockFilter;
 use bitcoin::{
