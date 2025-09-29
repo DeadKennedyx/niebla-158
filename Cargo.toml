@@ -7,6 +7,7 @@ description = "Compact block filters (BIP158) + light client plumbing (BIP157) f
 repository = "https://github.com/deadkennedyx/niebla-158"
 readme = "README.md"
 keywords = ["bitcoin", "bip157", "bip158", "light-client", "wallet"]
+categories = ["cryptography::cryptocurrencies"]
 
 [lib]
 name = "niebla_158"
