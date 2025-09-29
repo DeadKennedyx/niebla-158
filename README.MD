@@ -20,7 +20,7 @@ It verifies **cfheaders** (rolling compact-filter headers) against checkpoints, 
   - optional birth height.
 - `SqliteStore` — bundled, embedded SQLite implementation (no system SQLite needed).
 
-How you integrate it
+## How you integrate it
 
 You implement three small traits that the engine depends on:
 
