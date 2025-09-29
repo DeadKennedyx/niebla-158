@@ -1,6 +1,6 @@
 # niebla-158
 
-**BIP-158 compact filter** client engine for wallets.
+**BIP-158 compact filter** client engine for privacy wallets.
 
 It verifies **cfheaders** (rolling compact-filter headers) against checkpoints, scans **block filters** for your wallet’s scripts/addresses, and fetches matching blocks to hand back relevant transactions — without revealing your whole address list to a third-party server.
 
@@ -19,6 +19,23 @@ It verifies **cfheaders** (rolling compact-filter headers) against checkpoints, 
   - last scanned height,
   - optional birth height.
 - `SqliteStore` — bundled, embedded SQLite implementation (no system SQLite needed).
+
+How you integrate it
+
+You implement three small traits that the engine depends on:
+
+FilterSource — provide cfheaders batches, per-block cfilters, and raw blocks (bytes).
+
+WalletHooks — return your watchlist (scripts) and handle on_block_match callbacks.
+
+Store — persist a couple of integers (verified cfheaders tip and last scanned height).
+A bundled SQLite store is available behind the store-sqlite feature.
+
+Because the engine consumesw bytes at the boundary, its agnostic to which network client you use.
+
+Using Nakamoto
+
+You can use Nakamoto as your FilterSource by adding a tiny adapter that converts its responses into the byte shapes this crate expects (cfheaders as [u8; 32] hashes, cfilters as raw bytes, blocks as raw bytes).
 
 ## Install
 
