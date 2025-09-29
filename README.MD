@@ -36,3 +36,9 @@ Because the engine consumesw bytes at the boundary, its agnostic to which networ
 Using Nakamoto
 
 You can use Nakamoto as your FilterSource by adding a tiny adapter that converts its responses into the byte shapes this crate expects (cfheaders as [u8; 32] hashes, cfilters as raw bytes, blocks as raw bytes).
+
+## Status / Future plans
+
+Today: the crate ships the engine + traits and SQLite store.
+
+Planned: provide a first-party FilterSource implementation backed by Nakamoto and expose convenient constructors.
