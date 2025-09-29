@@ -24,3 +24,8 @@ bitcoin      = "0.32"            # already in your project
 hex          = "0.4"
 rusqlite     = { version = "0.31", optional = true, default-features = false, features = ["bundled"] }
 tokio = { version = "1", features = ["rt-multi-thread"] }
+
+[dev-dependencies]
+tokio        = { version = "1", features = ["rt-multi-thread", "macros"] }
+tempfile     = "3"
+async-trait  = "0.1"

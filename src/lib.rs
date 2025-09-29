@@ -6,6 +6,7 @@
 //! - [`FilterSource`]: fetch cfheaders batches, per-block filters, and raw blocks.
 //! - [`WalletHooks`]: provide a **watchlist** and handle **on_block_match** callbacks.
 //! - [`Store`]: keep a couple of integers (verified tip + last scanned).
+//! - [`HeaderSource`]: return block header info by height (used to scan ranges).
 //!
 //! ## What the engine does
 //! - Validates **cfheaders** against optional checkpoints (defense-in-depth).
@@ -13,25 +14,59 @@
 //! - On a hit, fetches the **block**, decodes transactions, and notifies you.
 //!
 //! ## Minimal usage
-//! ```rust,no_run
+//! ```rust,ignore
 //! use niebla_158::prelude::*;
-//! # struct MySource; # struct MyWallet;
-//! # #[async_trait::async_trait] impl FilterSource for MySource {
-//! #     async fn get_cfheaders(&self, _h: u32, _s: bitcoin::BlockHash) -> anyhow::Result<niebla_158::filter_source::CfHeaderBatch> { unimplemented!() }
-//! #     async fn get_cfilter(&self, _b: bitcoin::BlockHash) -> anyhow::Result<Vec<u8>> { unimplemented!() }
-//! #     async fn get_block(&self, _b: bitcoin::BlockHash) -> anyhow::Result<Vec<u8>> { unimplemented!() }
-//! # }
-//! # #[async_trait::async_trait] impl WalletHooks for MyWallet {
-//! #     async fn watchlist(&self) -> anyhow::Result<Vec<niebla_158::hooks::WatchItem>> { Ok(vec![]) }
-//! #     async fn on_block_match(&self, _h: u32, _bh: bitcoin::BlockHash, _txs: Vec<bitcoin::Transaction>) -> anyhow::Result<()> { Ok(()) }
-//! # }
-//! # async fn demo() -> anyhow::Result<()> {
-//! let store = SqliteStore::new("niebla158.db")?;
-//! let engine = Niebla158::new(store, MyWallet, MySource);
-//! let headers = std::iter::empty::<(u32, bitcoin::BlockHash)>();
-//! engine.run_to_tip(headers).await?;
-//! # Ok(()) }
-
+//! use bitcoin::{BlockHash, ScriptBuf, hashes::{sha256d, Hash as _}};
+//! use async_trait::async_trait;
+//!
+//! // --- Your implementations ---
+//! struct MySource;
+//! #[async_trait]
+//! impl FilterSource for MySource {
+//!     async fn get_cfheaders(&self, _start: u32, _stop: BlockHash) -> anyhow::Result<CfHeadersBatch> {
+//!         Ok(CfHeadersBatch { start_height: 0, headers: vec![] })
+//!     }
+//!     async fn get_cfilter(&self, _block: BlockHash) -> anyhow::Result<Vec<u8>> { Ok(vec![]) }
+//!     async fn get_block(&self, _block: BlockHash) -> anyhow::Result<Vec<u8>> { Ok(vec![]) }
+//! }
+//!
+//! struct MyHeaders;
+//! #[async_trait]
+//! impl HeaderSource for MyHeaders {
+//!     async fn tip_height(&self) -> anyhow::Result<u32> { Ok(0) }
+//!     async fn hash_at_height(&self, _h: u32) -> anyhow::Result<BlockHash> {
+//!         Ok(BlockHash::from_raw_hash(sha256d::Hash::all_zeros()))
+//!     }
+//! }
+//!
+//! struct MyStore;
+//! #[async_trait]
+//! impl Store for MyStore {
+//!     async fn load_cf_tip(&self) -> anyhow::Result<Option<(u32, BlockHash)>> { Ok(None) }
+//!     async fn save_cf_tip(&self, _h: u32, _cf: BlockHash) -> anyhow::Result<()> { Ok(()) }
+//!     async fn get_last_scanned(&self) -> anyhow::Result<u32> { Ok(0) }
+//!     async fn set_last_scanned(&self, _h: u32) -> anyhow::Result<()> { Ok(()) }
+//!     async fn get_birth_height(&self) -> anyhow::Result<Option<u32>> { Ok(None) }
+//!     async fn set_birth_height(&self, _h: u32) -> anyhow::Result<()> { Ok(()) }
+//! }
+//!
+//! struct MyWallet;
+//! #[async_trait]
+//! impl WalletHooks for MyWallet {
+//!     async fn watchlist(&self) -> anyhow::Result<Vec<ScriptBuf>> { Ok(vec![]) }
+//!     async fn on_block_match(
+//!         &self, _h: u32, _b: BlockHash, _txs: Vec<bitcoin::Transaction>
+//!     ) -> anyhow::Result<()> { Ok(()) }
+//! }
+//!
+//! // --- Wire it up ---
+//! async fn run() -> anyhow::Result<()> {
+//!     let engine = Niebla158::new(MyStore, MyWallet, MySource, MyHeaders);
+//!     // Drive with an iterator of (height, header_hash); here empty:
+//!     engine.run_to_tip(std::iter::empty()).await?;
+//!     Ok(())
+//! }
+//! ```
 /// Engine that verifies cfheaders, scans filters, and fetches matching blocks.
 pub mod engine;
 
@@ -41,23 +76,26 @@ pub mod filter_source;
 /// Wallet callbacks: provide a watchlist and receive matches.
 pub mod hooks;
 
-/// Persistence layer (traits and SQLite implementation).
-pub mod store;
+/// Source of block header info (height → block hash).
+pub mod headers;
 
 mod cfheaders;
 mod checkpoints;
-mod headers;
 mod matcher;
 
+/// Persistence layer (traits and SQLite implementation).
+pub mod store;
+
 pub use engine::Niebla158;
-pub use filter_source::FilterSource;
+pub use filter_source::{CfHeadersBatch, FilterSource};
+pub use headers::HeaderSource;
 pub use hooks::WalletHooks;
+pub use store::sqlite_store::SqliteStore;
 pub use store::Store;
 
-pub use store::sqlite_store::SqliteStore;
-
-/// Common re-exports for end users (engine + traits)
+/// Convenience re-exports for end users (engine + common traits).
 pub mod prelude {
-    pub use crate::{FilterSource, Niebla158, Store, WalletHooks};
+    //! Handy re-exports so you can `use niebla_158::prelude::*;`
+    pub use crate::{CfHeadersBatch, FilterSource, HeaderSource, Niebla158, Store, WalletHooks};
 }
 
