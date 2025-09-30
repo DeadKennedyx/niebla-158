@@ -1,6 +1,6 @@
 [package]
 name = "niebla-158"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "Compact block filters (BIP158) + light client plumbing (BIP157) for Bitcoin wallets"
@@ -19,7 +19,7 @@ anyhow       = "1"
 async-trait  = "0.1"
 bitcoin      = "0.32"
 hex          = "0.4"
-rusqlite     = { version = "0.31", default-features = false, features = ["bundled"] }
+rusqlite = { version = "0.32", default-features = false, features = ["bundled"] }
 tokio        = { version = "1", features = ["rt-multi-thread", "macros"] }
 
 [dev-dependencies]
