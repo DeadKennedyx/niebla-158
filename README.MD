@@ -1,4 +1,5 @@
 # niebla-158
+this library is **Still a work in progress**
 
 **BIP-158 compact filter** client engine for privacy wallets.
 
