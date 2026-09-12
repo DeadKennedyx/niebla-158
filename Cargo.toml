@@ -1,6 +1,6 @@
 [package]
 name = "niebla-158"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "Compact block filters (BIP158) + light client plumbing (BIP157) for Bitcoin wallets"
@@ -12,7 +12,9 @@ keywords = ["bitcoin", "bip157", "bip158", "light-client", "wallet"]
 name = "niebla_158"
 path = "src/lib.rs"
 
-# No [features] section anymore — everything is always on.
+[features]
+default = []
+rpc = ["dep:reqwest", "dep:serde", "dep:serde_json", "tokio/fs"]
 
 [dependencies]
 anyhow       = "1"
@@ -20,7 +22,15 @@ async-trait  = "0.1"
 bitcoin      = "0.32"
 hex          = "0.4"
 rusqlite = { version = "0.32", default-features = false, features = ["bundled"] }
-tokio        = { version = "1", features = ["rt-multi-thread", "macros"] }
+tokio        = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"] }
+reqwest = { version = "0.12", optional = true, default-features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1", optional = true, features = ["derive"] }
+serde_json = { version = "1", optional = true }
 
 [dev-dependencies]
 tempfile     = "3"
+serde_json = "1"
+
+[[example]]
+name = "bitcoin_core"
+required-features = ["rpc"]

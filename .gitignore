@@ -1,6 +1,8 @@
 /target
 **/*.rs.bk
 *.sqlite
+*.sqlite-wal
+*.sqlite-shm
 Cargo.lock
 .DS_Store
 .idea
