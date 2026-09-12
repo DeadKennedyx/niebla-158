@@ -1,34 +1,51 @@
-//! Persistence interfaces and implementations used by the engine
-//! (e.g., cfheaders tip and last scanned height).
+//! Durable filter commitments and wallet scan progress.
 use async_trait::async_trait;
-use bitcoin::BlockHash;
+use bitcoin::{
+    bip158::{FilterHash, FilterHeader},
+    BlockHash,
+};
 
-/// Minimal persistence interface. No secrets — just progress markers.
-#[async_trait]
-pub trait Store: Send + Sync {
-    /// Latest verified cfheaders rolling tip `(height, rolling_header_hash)`.
-    async fn load_cf_tip(&self) -> anyhow::Result<Option<(u32, BlockHash)>>;
-
-    /// Save latest verified cfheaders rolling tip.
-    async fn save_cf_tip(&self, height: u32, cfheader: BlockHash) -> anyhow::Result<()>;
-
-    /// Last height whose *filter* we scanned against our watchlist.
-    async fn get_last_scanned(&self) -> anyhow::Result<u32>;
-
-    /// Update last scanned height.
-    async fn set_last_scanned(&self, height: u32) -> anyhow::Result<()>;
-
-    /// (Optional) birth height to skip ancient history.
-    async fn get_birth_height(&self) -> anyhow::Result<Option<u32>> {
-        Ok(None)
-    }
-
-    /// Set birth height (optional).
-    async fn set_birth_height(&self, _h: u32) -> anyhow::Result<()> {
-        Ok(())
-    }
+/// Commitment to one block's basic filter on the synchronized chain.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FilterRecord {
+    /// Block height, starting at zero.
+    pub height: u32,
+    /// Identity of the associated Bitcoin block.
+    pub block_hash: BlockHash,
+    /// Double-SHA256 of the serialized filter bytes.
+    pub filter_hash: FilterHash,
+    /// Rolling BIP-157 header after this filter.
+    pub filter_header: FilterHeader,
 }
 
-// submodules / concrete stores live here
+/// Storage contract for one engine/wallet pair.
+///
+/// Retain contiguous commitments from genesis. Batch appends and chain rewinds
+/// must be atomic, including updates to scan progress during a rewind. Use one
+/// engine per store; the engine serializes its own sync and rescan operations.
+#[async_trait]
+pub trait Store: Send + Sync {
+    /// Last stored commitment, or `None` before genesis is synchronized.
+    async fn load_cf_tip(&self) -> anyhow::Result<Option<FilterRecord>>;
+    /// Commitment at a previously synchronized height.
+    async fn load_filter(&self, height: u32) -> anyhow::Result<Option<FilterRecord>>;
+    /// Atomically append a nonempty contiguous batch and update the tip.
+    /// Implementations must reject gaps, overwrites and invalid rolling links.
+    async fn save_filters(&self, records: &[FilterRecord]) -> anyhow::Result<()>;
+    /// Atomically remove commitments and scan progress above this height.
+    /// `None` clears all commitments and scan progress; preserve birth height.
+    async fn rewind(&self, retained_height: Option<u32>) -> anyhow::Result<()>;
+    /// Last scanned height. `None` distinguishes an unscanned genesis block.
+    async fn get_last_scanned(&self) -> anyhow::Result<Option<u32>>;
+    /// Set scan progress, rejecting heights without stored commitments.
+    /// `None` resets the cursor, without removing filter commitments.
+    async fn set_last_scanned(&self, height: Option<u32>) -> anyhow::Result<()>;
+    /// Optional first height to scan when no explicit rescan was requested.
+    async fn get_birth_height(&self) -> anyhow::Result<Option<u32>>;
+    /// Set or clear the wallet's birth height. Zero is a valid explicit value.
+    async fn set_birth_height(&self, height: Option<u32>) -> anyhow::Result<()>;
+}
+
+/// SQLite implementation with a connection retained for its entire lifetime.
 pub mod sqlite_store;
 pub use sqlite_store::SqliteStore;
